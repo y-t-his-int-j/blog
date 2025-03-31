@@ -21,6 +21,7 @@ authors:
     web: ""
     twitter: "" 
     description: "writing what I want"
+    avatar: "assets/images/avatarmewife.png"
 
 # Plugins
 plugins:
