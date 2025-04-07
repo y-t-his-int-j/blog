@@ -23,6 +23,14 @@ authors:
     description: "writing what I want"
     avatar: "assets/images/avatarmewife.png"
 
+
+# topics
+topics:
+  - Korean History
+  - International Relation
+  - China, Hongkong, Taiwan
+  - Far East Asian
+
 # Plugins
 plugins:
   - jekyll-paginate
