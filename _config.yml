@@ -4,7 +4,8 @@ title: "MyThink"
 description: "Welcome, MyPage, I am interested in Korean history with Japan, China and Inter-relationship"
 logo: 'assets/images/logo.png'
 favicon: 'assets/images/logo.png'
-baseurl: /mediumish-theme-jekyll
+# baseurl: /mediumish-theme-jekyll
+baseurl:
 google_analytics: ''
 disqus: ''
 mailchimp-list: ''
