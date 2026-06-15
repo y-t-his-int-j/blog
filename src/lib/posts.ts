@@ -1,4 +1,3 @@
-import matter from 'gray-matter';
 import { marked } from 'marked';
 
 export type Post = {
@@ -18,6 +17,11 @@ type FrontMatter = {
   author?: string;
   categories?: string[];
   image?: string;
+};
+
+type ParsedMarkdown = {
+  data: FrontMatter;
+  content: string;
 };
 
 const markdownFiles = import.meta.glob<string>('/_posts/*.md', {
@@ -59,6 +63,48 @@ function assetUrl(path = '') {
   return imageFiles[`/${cleanPath}`] ?? `/${cleanPath}`;
 }
 
+function parseFrontMatter(raw: string): ParsedMarkdown {
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+
+  if (!match) {
+    return {
+      data: {},
+      content: raw,
+    };
+  }
+
+  const data = match[1].split(/\r?\n/).reduce<FrontMatter>((frontMatter, line) => {
+    const field = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+
+    if (!field) {
+      return frontMatter;
+    }
+
+    const [, key, rawValue] = field;
+    const value = rawValue.trim().replace(/^["']|["']$/g, '');
+
+    if (key === 'title' || key === 'author' || key === 'image') {
+      frontMatter[key] = value;
+    }
+
+    if (key === 'categories') {
+      frontMatter.categories = value
+        .replace(/^\[/, '')
+        .replace(/\]$/, '')
+        .split(',')
+        .map((category) => category.trim().replace(/^["']|["']$/g, ''))
+        .filter(Boolean);
+    }
+
+    return frontMatter;
+  }, {});
+
+  return {
+    data,
+    content: raw.slice(match[0].length),
+  };
+}
+
 function normalizeAssetPaths(markdown: string) {
   return markdown
     .replace(/(!\[[^\]]*\]\()((?:\.\.\/)*assets\/images\/[^)\s]+)(\))/g, (_, open, url, close) => {
@@ -94,8 +140,8 @@ export const posts: Post[] = Object.entries(markdownFiles)
   .map(([path, raw]) => {
     const filename = filenameFromPath(path);
     const date = postDateFromFilename(filename);
-    const parsed = matter(raw);
-    const data = parsed.data as FrontMatter;
+    const parsed = parseFrontMatter(raw);
+    const data = parsed.data;
     const normalizedContent = normalizeAssetPaths(parsed.content);
 
     return {
