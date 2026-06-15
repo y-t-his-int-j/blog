@@ -1,11 +1,12 @@
 <script lang="ts">
   import { categories, getPost, posts } from './lib/posts';
 
-  let path = window.location.pathname;
-
   const siteTitle = 'MyThink';
   const siteDescription =
     'Personal notes on China, Hong Kong, language, memory, and East Asian culture.';
+  const basePath = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+
+  let path = normalizePath(window.location.pathname);
 
   $: activeSlug = path.match(/^\/post\/([^/]+)\/?$/)?.[1] ?? '';
   $: activePost = activeSlug ? getPost(activeSlug) : undefined;
@@ -14,15 +15,27 @@
     ? posts.filter((post) => post.categories.includes(decodeURIComponent(activeCategory)))
     : posts;
 
+  function normalizePath(pathname: string) {
+    if (basePath && (pathname === basePath || pathname.startsWith(`${basePath}/`))) {
+      return pathname.slice(basePath.length) || '/';
+    }
+
+    return pathname || '/';
+  }
+
+  function appHref(href: string) {
+    return `${basePath}${href}`;
+  }
+
   function navigate(event: MouseEvent, href: string) {
     event.preventDefault();
-    history.pushState(null, '', href);
-    path = window.location.pathname;
+    history.pushState(null, '', appHref(href));
+    path = href;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   window.addEventListener('popstate', () => {
-    path = window.location.pathname;
+    path = normalizePath(window.location.pathname);
   });
 </script>
 
@@ -31,16 +44,16 @@
 </svelte:head>
 
 <header class="site-header">
-  <a class="brand" href="/" on:click={(event) => navigate(event, '/')}>{siteTitle}</a>
+  <a class="brand" href={appHref('/')} on:click={(event) => navigate(event, '/')}>{siteTitle}</a>
   <nav aria-label="Primary navigation">
-    <a href="/" on:click={(event) => navigate(event, '/')}>Writing</a>
-    <a href="/#about">About</a>
+    <a href={appHref('/')} on:click={(event) => navigate(event, '/')}>Writing</a>
+    <a href={appHref('/#about')}>About</a>
   </nav>
 </header>
 
 {#if activePost}
   <main class="post-shell">
-    <a class="back-link" href="/" on:click={(event) => navigate(event, '/')}>Back to all writing</a>
+    <a class="back-link" href={appHref('/')} on:click={(event) => navigate(event, '/')}>Back to all writing</a>
 
     <article class="post-detail">
       <header class="post-hero">
@@ -52,7 +65,10 @@
           <h1>{activePost.title}</h1>
           <div class="category-row" aria-label="Categories">
             {#each activePost.categories as category}
-              <a href={`/category/${category}`} on:click={(event) => navigate(event, `/category/${category}`)}>
+              <a
+                href={appHref(`/category/${category}`)}
+                on:click={(event) => navigate(event, `/category/${category}`)}
+              >
                 {category}
               </a>
             {/each}
@@ -75,11 +91,11 @@
 
     {#if categories.length}
       <section class="filters" aria-label="Post categories">
-        <a class:active={!activeCategory} href="/" on:click={(event) => navigate(event, '/')}>All</a>
+        <a class:active={!activeCategory} href={appHref('/')} on:click={(event) => navigate(event, '/')}>All</a>
         {#each categories as category}
           <a
             class:active={decodeURIComponent(activeCategory) === category}
-            href={`/category/${category}`}
+            href={appHref(`/category/${category}`)}
             on:click={(event) => navigate(event, `/category/${category}`)}
           >
             {category}
@@ -92,14 +108,14 @@
       {#each visiblePosts as post}
         <article class="post-card">
           {#if post.image}
-            <a href={`/post/${post.slug}`} on:click={(event) => navigate(event, `/post/${post.slug}`)}>
+            <a href={appHref(`/post/${post.slug}`)} on:click={(event) => navigate(event, `/post/${post.slug}`)}>
               <img src={post.image} alt="" loading="lazy" />
             </a>
           {/if}
           <div>
             <p class="meta">{post.displayDate} · {post.author}</p>
             <h2>
-              <a href={`/post/${post.slug}`} on:click={(event) => navigate(event, `/post/${post.slug}`)}>
+              <a href={appHref(`/post/${post.slug}`)} on:click={(event) => navigate(event, `/post/${post.slug}`)}>
                 {post.title}
               </a>
             </h2>
