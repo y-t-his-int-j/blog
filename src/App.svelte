@@ -57,9 +57,6 @@
 
     <article class="post-detail">
       <header class="post-hero">
-        {#if activePost.image}
-          <img src={activePost.image} alt="" loading="eager" />
-        {/if}
         <div>
           <p class="meta">{activePost.displayDate} · {activePost.author}</p>
           <h1>{activePost.title}</h1>
